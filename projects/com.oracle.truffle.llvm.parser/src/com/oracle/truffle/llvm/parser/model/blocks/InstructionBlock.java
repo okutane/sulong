@@ -66,6 +66,8 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidCallInstruc
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidInvokeInstruction;
 import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitor;
 import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBaseNode;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataDebugLocation;
 import com.oracle.truffle.llvm.runtime.types.VoidType;
 import com.oracle.truffle.llvm.runtime.types.symbols.LLVMIdentifier;
 import com.oracle.truffle.llvm.runtime.types.symbols.ValueSymbol;
@@ -222,6 +224,10 @@ public final class InstructionBlock implements ValueSymbol {
 
     public void createUnreachable() {
         addInstruction(UnreachableInstruction.generate());
+    }
+
+    public void attachDebugLocation(MetadataDebugLocation debugLocation) {
+        instructions.get(instructions.size() - 1).setDebugLocation(debugLocation);
     }
 
     public int getBlockIndex() {

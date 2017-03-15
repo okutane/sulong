@@ -37,18 +37,27 @@ import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.Type;
 import com.oracle.truffle.llvm.runtime.types.VoidType;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public final class MetadataBlock {
 
     private final List<MetadataBaseNode> metadata;
+
+    private final Map<String, MetadataBaseNode> namedMetadata;
 
     private int startIndex = 0;
 
     public MetadataBlock() {
         metadata = new ArrayList<>();
+        namedMetadata = new HashMap<>();
     }
 
     public MetadataBlock(MetadataBlock orig) {
         this.metadata = new ArrayList<>(orig.metadata);
+        this.namedMetadata = new HashMap<>(orig.namedMetadata);
         this.startIndex = orig.startIndex;
     }
 
@@ -58,6 +67,10 @@ public final class MetadataBlock {
 
     public void add(MetadataBaseNode element) {
         metadata.add(element);
+    }
+
+    public void put(String name, MetadataBaseNode element) {
+        namedMetadata.put(name, element);
     }
 
     public MetadataBaseNode get(int index) {
