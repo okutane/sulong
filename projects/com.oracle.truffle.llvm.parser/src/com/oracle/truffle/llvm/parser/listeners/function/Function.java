@@ -41,14 +41,9 @@ import com.oracle.truffle.llvm.parser.model.generators.FunctionGenerator;
 import com.oracle.truffle.llvm.parser.records.Records;
 import com.oracle.truffle.llvm.parser.scanner.Block;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
-import com.oracle.truffle.llvm.runtime.types.AggregateType;
-import com.oracle.truffle.llvm.runtime.types.ArrayType;
-import com.oracle.truffle.llvm.runtime.types.IntegerConstantType;
-import com.oracle.truffle.llvm.runtime.types.IntegerType;
-import com.oracle.truffle.llvm.runtime.types.PointerType;
-import com.oracle.truffle.llvm.runtime.types.StructureType;
-import com.oracle.truffle.llvm.runtime.types.Type;
-import com.oracle.truffle.llvm.runtime.types.VectorType;
+import com.oracle.truffle.llvm.runtime.types.*;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBaseNode;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataDebugLocation;
 
 public abstract class Function implements ParserListener {
 
@@ -65,6 +60,8 @@ public abstract class Function implements ParserListener {
     private final int mode;
 
     protected InstructionBlock code;
+
+    private MetadataDebugLocation lastLoc;
 
     Function(IRVersionController version, Types types, List<Type> symbols, FunctionGenerator generator, int mode) {
         this.version = version;
@@ -143,10 +140,19 @@ public abstract class Function implements ParserListener {
              *
              * @formatter:on
              */
+            MetadataBaseNode scope = generator.getMetadata().getAbsolute((int) args[2] - 1);
+            MetadataDebugLocation loc = new MetadataDebugLocation(args[0], args[1], scope);
+            if (code != null) {
+                code.attachDebugLocation(loc);
+                lastLoc = loc;
+            }
             return;
         }
 
         if (record == FunctionRecord.DEBUG_LOC_AGAIN) {
+            if (code != null) {
+                code.attachDebugLocation(lastLoc);
+            }
             return;
         }
 
@@ -336,8 +342,8 @@ public abstract class Function implements ParserListener {
         int opcode = (int) args[i];
 
         Type type = operandType instanceof VectorType
-                        ? new VectorType(IntegerType.BOOLEAN, ((VectorType) operandType).getLength())
-                        : IntegerType.BOOLEAN;
+                ? new VectorType(IntegerType.BOOLEAN, ((VectorType) operandType).getLength())
+                : IntegerType.BOOLEAN;
 
         code.createCompare(type, opcode, lhs, rhs);
 
@@ -381,10 +387,10 @@ public abstract class Function implements ParserListener {
         Type type = new PointerType(getElementPointerType(symbols.get(pointer).getType(), indices));
 
         code.createGetElementPointer(
-                        type,
-                        pointer,
-                        indices,
-                        isInbounds);
+                type,
+                pointer,
+                indices,
+                isInbounds);
 
         symbols.add(type);
     }
@@ -403,10 +409,10 @@ public abstract class Function implements ParserListener {
         Type type = new PointerType(getElementPointerType(base, indices));
 
         code.createGetElementPointer(
-                        type,
-                        pointer,
-                        indices,
-                        isInbounds);
+                type,
+                pointer,
+                indices,
+                isInbounds);
 
         symbols.add(type);
     }

@@ -37,12 +37,12 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Base64;
 
-final class BitStream {
+public final class BitStream {
 
     private static final long BYTE_MASK = 0xffL;
     private final byte[] bitstream;
 
-    private BitStream(byte[] bitstream) {
+    public BitStream(byte[] bitstream) {
         this.bitstream = bitstream;
     }
 
@@ -71,7 +71,7 @@ final class BitStream {
         }
     }
 
-    static long widthVBR(long value, long width) {
+    public static long widthVBR(long value, long width) {
         long total = 0;
         long v = value;
         do {
@@ -85,7 +85,7 @@ final class BitStream {
         return read(offset) & ((1L << bits) - 1L);
     }
 
-    long readVBR(long offset, long width) {
+    public long readVBR(long offset, long width) {
         long value = 0;
         long shift = 0;
         long datum;
