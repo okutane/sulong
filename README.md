@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/graalvm/sulong.svg?branch=master)](https://travis-ci.org/graalvm/sulong)
+
 ![Sulong Logo](https://raw.githubusercontent.com/mrigger/sulong-logos/master/sulong_black_with_text_transparent_300x185.png)
 
 Sulong (Graal LLVM) is an interpreter for LLVM IR written in
