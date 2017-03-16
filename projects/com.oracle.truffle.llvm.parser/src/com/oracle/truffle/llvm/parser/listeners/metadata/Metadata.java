@@ -69,8 +69,6 @@ public abstract class Metadata implements ParserListener {
 
     protected final MetadataBlock metadata;
 
-    private MetadataName metadataName;
-
     Metadata(Types types, List<Type> symbols, SymbolGenerator generator) {
         this.types = types;
         this.symbols = symbols;
@@ -97,10 +95,6 @@ public abstract class Metadata implements ParserListener {
         switch (record) {
             case STRING:
                 createString(args);
-                break;
-
-            case STRINGS:
-                createStrings(args);
                 break;
 
             case VALUE:
@@ -227,37 +221,6 @@ public abstract class Metadata implements ParserListener {
         metadata.add(node);
     }
 
-    private static byte[] longArrayToByteArray(long[] args, int offset) {
-        byte[] result = new byte[args.length - offset];
-
-        for (int i = offset; i < args.length; i++) {
-            result[i - offset] = (byte) (args[i] & LONG_ARRAY_TO_STRING_BYTE_PART);
-        }
-
-        return result;
-    }
-
-    private void createStrings(long[] args) {
-        long count = args[0];
-        long offset = args[1];
-        byte[] blob = longArrayToByteArray(args, 2);
-
-        byte[] lengths = new byte[Math.toIntExact(offset)];
-        byte[] chars = new byte[Math.toIntExact(blob.length - offset)];
-        System.arraycopy(blob, 0, lengths, 0, lengths.length);
-        System.arraycopy(blob, Math.toIntExact(offset), chars, 0, chars.length);
-
-        BitStream bitStream = new BitStream(lengths);
-        int streamOffset = 0;
-        for (int i = 0; i < count; i++) {
-            int length = Math.toIntExact(bitStream.readVBR(streamOffset, 6));
-            streamOffset += BitStream.widthVBR(length, 6);
-
-            metadata.add(new MetadataString(new String(blob, Math.toIntExact(offset), length)));
-            offset += length;
-        }
-    }
-
     private void createValue(long[] args) {
         Type t = MetadataArgumentParser.typeValToType(types, symbols, args[0], args[1]);
 
@@ -277,7 +240,9 @@ public abstract class Metadata implements ParserListener {
     }
 
     private void createName(long[] args) {
-        metadataName = new MetadataName(longArrayToString(args));
+        MetadataName node = new MetadataName(longArrayToString(args));
+
+        metadata.add(node);
     }
 
     private void createDistinctNode(long[] args) {
@@ -314,7 +279,7 @@ public abstract class Metadata implements ParserListener {
             node.add(metadata.getReference((int) arg));
         }
 
-        metadata.put(metadataName.getName(), node);
+        metadata.add(node);
     }
 
     private void createAttachment(long[] args) {
@@ -390,7 +355,7 @@ public abstract class Metadata implements ParserListener {
         i++; // scope
         node.setName(metadata.getReference(args[i++]));
         node.setLinkageName(metadata.getReference(args[i++]));
-        node.setFile(metadata.getReference(args[i++] - 1));
+        node.setFile(metadata.getReference(args[i++]));
         node.setLine(args[i++]);
         node.setType(metadata.getReference(args[i++]));
         node.setLocalToUnit(args[i++] == 1);

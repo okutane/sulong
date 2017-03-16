@@ -106,6 +106,64 @@ final class LLVMMetadata implements ModelVisitor {
             block.accept(this);
         }
 
+        /*
+         * TODO: metadata seems to be misalign by 8
+         *
+         * I don't know why, but there is a little misalign between calculated and real metadata id.
+         * This has to be solved in the future!
+         *
+         * Possible issues could probably arrive when there are changes in the number of MDKinds.
+         * This has to be evaluated in the future
+         */
+        private static final int SYMBOL_MISALIGN = 8;
+
+        /**
+         * Check if the current call instruction declares a variable.
+         *
+         * If yes, we can link the type informations with the metadata informations parsed before,
+         * and use those linking to get additional type informations if needed. Like getting the
+         * name of a structure element when doing an GetElementPointerInstruction.
+         */
+        @Override
+        public void visit(VoidCallInstruction call) {
+            Symbol callTarget = call.getCallTarget();
+
+            if (callTarget instanceof FunctionDeclaration) {
+                if (((FunctionDeclaration) (callTarget)).getName().equals("@llvm.dbg.declare")) {
+
+                    int symbolMetadataId = (int) ((MetadataConstant) call.getArgument(0)).getValue() + SYMBOL_MISALIGN;
+                    int symbolIndex = ((MetadataFnNode) metadata.get(symbolMetadataId)).getPointer().getSymbolIndex();
+                    long metadataId = ((MetadataConstant) call.getArgument(1)).getValue();
+                    Symbol referencedSymbol = currentBlock.getFunctionSymbols().getSymbol(symbolIndex);
+
+                    MetadataSubtypeType localVar = (MetadataSubtypeType) metadata.getReference(metadataId).get();
+                    MetadataReference typeReference = localVar.getType();
+
+                    if (referencedSymbol instanceof AllocateInstruction) {
+                        linkTypeToMetadataInformations(((AllocateInstruction) referencedSymbol).getPointeeType(), typeReference);
+                    }
+                }
+            }
+        }
+
+        private void linkTypeToMetadataInformations(Type target, MetadataReference sourceReference) {
+            /*
+             * currently, we only attach Metadata type informations to Reference Types (Arrays,
+             * Vectors, Structures)
+             */
+            if (target instanceof MetadataReferenceType) {
+                MetadataReferenceType metadataRefType = (MetadataReferenceType) target;
+                metadataRefType.setValidatedMetadataReference(getBaseType(sourceReference));
+            }
+        }
+
+        private MetadataReference getBaseType(MetadataReference type) {
+            if (type.get() instanceof MetadataDerivedType) {
+                return ((MetadataDerivedType) type.get()).getTrueBaseType();
+            }
+            return type;
+        }
+
         /**
          * Check if the current call instruction declares a variable.
          *
