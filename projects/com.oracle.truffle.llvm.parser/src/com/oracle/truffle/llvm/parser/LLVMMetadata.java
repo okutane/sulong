@@ -38,7 +38,6 @@ import com.oracle.truffle.llvm.parser.model.symbols.instructions.AllocateInstruc
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.CastInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.GetElementPointerInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.Instruction;
-import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidCallInstruction;
 import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitorAdapter;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
@@ -80,72 +79,16 @@ final class LLVMMetadata implements ModelVisitor {
 
     @Override
     public void visit(FunctionDefinition function) {
-        LLVMMetadataFunctionVisitor visitor = new LLVMMetadataFunctionVisitor(function.getMetadata());
+        LLVMMetadataFunctionVisitor visitor = new LLVMMetadataFunctionVisitor();
 
         function.accept(visitor);
     }
 
     private final class LLVMMetadataFunctionVisitor implements FunctionVisitor, InstructionVisitorAdapter {
-        private InstructionBlock currentBlock = null;
-
-        private final MetadataBlock metadata;
-
-        private LLVMMetadataFunctionVisitor(MetadataBlock metadata) {
-            this.metadata = metadata;
-        }
-
         @Override
         public void visit(InstructionBlock block) {
-            this.currentBlock = block;
             block.accept(this);
         }
-
-        /**
-         * Check if the current call instruction declares a variable.
-         *
-         * If yes, we can link the type informations with the metadata informations parsed before,
-         * and use those linking to get additional type informations if needed. Like getting the
-         * name of a structure element when doing an GetElementPointerInstruction.
-         */
-        @Override
-        public void visit(VoidCallInstruction call) {
-//            Symbol callTarget = call.getCallTarget();
-//
-//            if (callTarget instanceof FunctionDeclaration) {
-//                if (((FunctionDeclaration) (callTarget)).getName().equals("@llvm.dbg.declare")) {
-//
-//                    int symbolMetadataId = (int) ((MetadataConstant) call.getArgument(0)).getValue() - 1;
-//                    int symbolIndex = ((MetadataFnNode) metadata.get(symbolMetadataId)).getPointer().getSymbolIndex();
-//                    long metadataId = ((MetadataConstant) call.getArgument(1)).getValue();
-//                    Symbol referencedSymbol = currentBlock.getFunctionSymbols().getSymbol(symbolIndex);
-//
-//                    MetadataSubtypeType localVar = (MetadataSubtypeType) metadata.getReference(metadataId).get();
-//                    MetadataReference typeReference = localVar.getType();
-//
-//                    if (referencedSymbol instanceof AllocateInstruction) {
-//                        linkTypeToMetadataInformations(((AllocateInstruction) referencedSymbol).getPointeeType(), typeReference);
-//                    }
-//                }
-//            }
-        }
-
-//        private void linkTypeToMetadataInformations(Type target, MetadataReference sourceReference) {
-//            /*
-//             * currently, we only attach Metadata type informations to Reference Types (Arrays,
-//             * Vectors, Structures)
-//             */
-//            if (target instanceof MetadataReferenceType) {
-//                MetadataReferenceType metadataRefType = (MetadataReferenceType) target;
-//                metadataRefType.setValidatedMetadataReference(getBaseType(sourceReference));
-//            }
-//        }
-
-//        private MetadataReference getBaseType(MetadataReference type) {
-//            if (type.get() instanceof MetadataDerivedType) {
-//                return ((MetadataDerivedType) type.get()).getTrueBaseType();
-//            }
-//            return type;
-//        }
 
         /**
          * Try to get the corresponding variable name, which is fetched by the
