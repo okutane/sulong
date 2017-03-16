@@ -32,12 +32,15 @@ package com.oracle.truffle.llvm.parser;
 import com.oracle.truffle.llvm.parser.datalayout.DataLayoutConverter;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
+import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
+import com.oracle.truffle.llvm.parser.model.symbols.constants.MetadataConstant;
 import com.oracle.truffle.llvm.parser.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.AllocateInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.CastInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.GetElementPointerInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.Instruction;
+import com.oracle.truffle.llvm.parser.model.symbols.instructions.VoidCallInstruction;
 import com.oracle.truffle.llvm.parser.model.visitors.FunctionVisitor;
 import com.oracle.truffle.llvm.parser.model.visitors.InstructionVisitorAdapter;
 import com.oracle.truffle.llvm.parser.model.visitors.ModelVisitor;
@@ -51,9 +54,12 @@ import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock.MetadataReference;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataCompositeType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataDerivedType;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataFnNode;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataNode;
+import com.oracle.truffle.llvm.runtime.types.metadata.MetadataReferenceType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataString;
 import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubtypeName;
+import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubtypeType;
 import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubytypeSizeAlignOffset;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -79,15 +85,82 @@ final class LLVMMetadata implements ModelVisitor {
 
     @Override
     public void visit(FunctionDefinition function) {
-        LLVMMetadataFunctionVisitor visitor = new LLVMMetadataFunctionVisitor();
+        LLVMMetadataFunctionVisitor visitor = new LLVMMetadataFunctionVisitor(function.getMetadata());
 
         function.accept(visitor);
     }
 
     private final class LLVMMetadataFunctionVisitor implements FunctionVisitor, InstructionVisitorAdapter {
+        private InstructionBlock currentBlock = null;
+
+        private final MetadataBlock metadata;
+
+        private LLVMMetadataFunctionVisitor(MetadataBlock metadata) {
+            this.metadata = metadata;
+        }
+
         @Override
         public void visit(InstructionBlock block) {
+            this.currentBlock = block;
             block.accept(this);
+        }
+
+        /*
+         * TODO: metadata seems to be misalign by 8
+         *
+         * I don't know why, but there is a little misalign between calculated and real metadata id.
+         * This has to be solved in the future!
+         *
+         * Possible issues could probably arrive when there are changes in the number of MDKinds.
+         * This has to be evaluated in the future
+         */
+        private static final int SYMBOL_MISALIGN = 8;
+
+        /**
+         * Check if the current call instruction declares a variable.
+         *
+         * If yes, we can link the type informations with the metadata informations parsed before,
+         * and use those linking to get additional type informations if needed. Like getting the
+         * name of a structure element when doing an GetElementPointerInstruction.
+         */
+        @Override
+        public void visit(VoidCallInstruction call) {
+            Symbol callTarget = call.getCallTarget();
+
+            if (callTarget instanceof FunctionDeclaration) {
+                if (((FunctionDeclaration) (callTarget)).getName().equals("@llvm.dbg.declare")) {
+
+                    int symbolMetadataId = (int) ((MetadataConstant) call.getArgument(0)).getValue() + SYMBOL_MISALIGN;
+                    int symbolIndex = ((MetadataFnNode) metadata.get(symbolMetadataId)).getPointer().getSymbolIndex();
+                    long metadataId = ((MetadataConstant) call.getArgument(1)).getValue();
+                    Symbol referencedSymbol = currentBlock.getFunctionSymbols().getSymbol(symbolIndex);
+
+                    MetadataSubtypeType localVar = (MetadataSubtypeType) metadata.getReference(metadataId).get();
+                    MetadataReference typeReference = localVar.getType();
+
+                    if (referencedSymbol instanceof AllocateInstruction) {
+                        linkTypeToMetadataInformations(((AllocateInstruction) referencedSymbol).getPointeeType(), typeReference);
+                    }
+                }
+            }
+        }
+
+        private void linkTypeToMetadataInformations(Type target, MetadataReference sourceReference) {
+            /*
+             * currently, we only attach Metadata type informations to Reference Types (Arrays,
+             * Vectors, Structures)
+             */
+            if (target instanceof MetadataReferenceType) {
+                MetadataReferenceType metadataRefType = (MetadataReferenceType) target;
+                metadataRefType.setValidatedMetadataReference(getBaseType(sourceReference));
+            }
+        }
+
+        private MetadataReference getBaseType(MetadataReference type) {
+            if (type.get() instanceof MetadataDerivedType) {
+                return ((MetadataDerivedType) type.get()).getTrueBaseType();
+            }
+            return type;
         }
 
         /**
