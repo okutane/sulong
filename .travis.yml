@@ -37,9 +37,6 @@ install:
   - export JAVA_HOME=`pwd`/jdk1.8.0_111-jvmci-0.23
 script:
   - $TEST_COMMAND
-branches:
-  only:
-    - master
 matrix:
   fast_finish: true
   include:
