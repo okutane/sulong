@@ -32,9 +32,7 @@ package com.oracle.truffle.llvm.parser;
 import com.oracle.truffle.llvm.parser.datalayout.DataLayoutConverter;
 import com.oracle.truffle.llvm.parser.model.ModelModule;
 import com.oracle.truffle.llvm.parser.model.blocks.InstructionBlock;
-import com.oracle.truffle.llvm.parser.model.functions.FunctionDeclaration;
 import com.oracle.truffle.llvm.parser.model.functions.FunctionDefinition;
-import com.oracle.truffle.llvm.parser.model.symbols.constants.MetadataConstant;
 import com.oracle.truffle.llvm.parser.model.symbols.constants.integer.IntegerConstant;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.AllocateInstruction;
 import com.oracle.truffle.llvm.parser.model.symbols.instructions.CastInstruction;
@@ -54,12 +52,9 @@ import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataBlock.MetadataReference;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataCompositeType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataDerivedType;
-import com.oracle.truffle.llvm.runtime.types.metadata.MetadataFnNode;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataNode;
-import com.oracle.truffle.llvm.runtime.types.metadata.MetadataReferenceType;
 import com.oracle.truffle.llvm.runtime.types.metadata.MetadataString;
 import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubtypeName;
-import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubtypeType;
 import com.oracle.truffle.llvm.runtime.types.metadata.subtypes.MetadataSubytypeSizeAlignOffset;
 import com.oracle.truffle.llvm.runtime.types.symbols.Symbol;
 
@@ -134,23 +129,23 @@ final class LLVMMetadata implements ModelVisitor {
 //            }
         }
 
-        private void linkTypeToMetadataInformations(Type target, MetadataReference sourceReference) {
-            /*
-             * currently, we only attach Metadata type informations to Reference Types (Arrays,
-             * Vectors, Structures)
-             */
-            if (target instanceof MetadataReferenceType) {
-                MetadataReferenceType metadataRefType = (MetadataReferenceType) target;
-                metadataRefType.setValidatedMetadataReference(getBaseType(sourceReference));
-            }
-        }
+//        private void linkTypeToMetadataInformations(Type target, MetadataReference sourceReference) {
+//            /*
+//             * currently, we only attach Metadata type informations to Reference Types (Arrays,
+//             * Vectors, Structures)
+//             */
+//            if (target instanceof MetadataReferenceType) {
+//                MetadataReferenceType metadataRefType = (MetadataReferenceType) target;
+//                metadataRefType.setValidatedMetadataReference(getBaseType(sourceReference));
+//            }
+//        }
 
-        private MetadataReference getBaseType(MetadataReference type) {
-            if (type.get() instanceof MetadataDerivedType) {
-                return ((MetadataDerivedType) type.get()).getTrueBaseType();
-            }
-            return type;
-        }
+//        private MetadataReference getBaseType(MetadataReference type) {
+//            if (type.get() instanceof MetadataDerivedType) {
+//                return ((MetadataDerivedType) type.get()).getTrueBaseType();
+//            }
+//            return type;
+//        }
 
         /**
          * Try to get the corresponding variable name, which is fetched by the
