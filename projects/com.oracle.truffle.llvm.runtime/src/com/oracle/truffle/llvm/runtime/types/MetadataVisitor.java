@@ -126,7 +126,7 @@ public interface MetadataVisitor {
         ifVisitNotOverwritten(alias);
     }
 
-    default void visit(MetadataDebugLocation debugLocation) {
-        ifVisitNotOverwritten(debugLocation);
+    default void visit(MetadataDebugLocation alias) {
+        ifVisitNotOverwritten(alias);
     }
 }
