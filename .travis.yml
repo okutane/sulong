@@ -45,6 +45,9 @@ script:
 matrix:
   fast_finish: true
   include:
+  - os: osx
+    osx_image: xcode8
+    env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (apple llvm)'
   - env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (3.2)'
     jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-travis1' CLANG='suite version (3.2)'
