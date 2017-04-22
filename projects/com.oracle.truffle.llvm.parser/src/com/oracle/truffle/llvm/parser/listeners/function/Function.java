@@ -70,6 +70,8 @@ public abstract class Function implements ParserListener {
 
     protected InstructionBlock code;
 
+    private InstructionBlock lastCode;
+
     private final List<Integer> implicitIndices = new ArrayList<>();
 
     private MetadataDebugLocation lastLoc;
@@ -140,27 +142,23 @@ public abstract class Function implements ParserListener {
          * for an existing InstructionGenerator. Otherwise we would cause an RuntimeException.
          */
         if (record == FunctionRecord.DEBUG_LOC) {
-            /*
-             * TODO: implement intial debugging support
-             *
-             * http://llvm.org/releases/3.2/docs/SourceLevelDebugging.html#format_common_lifetime
-             * http://llvm.org/releases/3.4/docs/SourceLevelDebugging.html#object-lifetimes-and-scoping
-             *
-             * @formatter:off
-             *
-             * metadata !{
-             *  i32 4,          ;; line number
-             *  i32 0,          ;; column number
-             *  metadata !12,   ;; scope
-             *  null            ;; original scope
-             * }
-             *
-             * @formatter:on
-             */
+            MetadataBaseNode scope = generator.getMetadata().getAbsolute((int) args[2] - 1);
+            MetadataDebugLocation loc = new MetadataDebugLocation(args[0], args[1], scope);
+            if (code != null) {
+                code.attachDebugLocation(loc);
+                lastLoc = loc;
+            } else {
+                lastCode.attachDebugLocation(loc);
+            }
             return;
         }
 
         if (record == FunctionRecord.DEBUG_LOC_AGAIN) {
+            if (code != null) {
+                code.attachDebugLocation(lastLoc);
+            } else {
+                lastCode.attachDebugLocation(lastLoc);
+            }
             return;
         }
 
@@ -393,6 +391,11 @@ public abstract class Function implements ParserListener {
             code.createBranch(getIndex(args[2]), (int) args[0], (int) args[1]);
         }
 
+        finalizeCode();
+    }
+
+    void finalizeCode() {
+        lastCode = code;
         code = null;
     }
 
@@ -423,8 +426,8 @@ public abstract class Function implements ParserListener {
         int opcode = (int) args[i];
 
         Type type = operandType instanceof VectorType
-                        ? new VectorType(PrimitiveType.I1, ((VectorType) operandType).getNumberOfElements())
-                        : PrimitiveType.I1;
+                ? new VectorType(PrimitiveType.I1, ((VectorType) operandType).getNumberOfElements())
+                : PrimitiveType.I1;
 
         code.createCompare(type, opcode, lhs, rhs);
 
@@ -473,10 +476,10 @@ public abstract class Function implements ParserListener {
         Type type = new PointerType(getElementPointerType(base, indices));
 
         code.createGetElementPointer(
-                        type,
-                        pointer,
-                        indices,
-                        isInbounds);
+                type,
+                pointer,
+                indices,
+                isInbounds);
 
         symbols.add(type);
     }
@@ -495,10 +498,10 @@ public abstract class Function implements ParserListener {
         Type type = new PointerType(getElementPointerType(base, indices));
 
         code.createGetElementPointer(
-                        type,
-                        pointer,
-                        indices,
-                        isInbounds);
+                type,
+                pointer,
+                indices,
+                isInbounds);
 
         symbols.add(type);
     }
@@ -512,7 +515,7 @@ public abstract class Function implements ParserListener {
 
         code.createIndirectBranch(address, successors);
 
-        code = null;
+        finalizeCode();
     }
 
     private void createInsertElement(long[] args) {
@@ -566,7 +569,7 @@ public abstract class Function implements ParserListener {
             code.createReturn(getIndex(args[0]));
         }
 
-        code = null;
+        finalizeCode();
     }
 
     private void createSelect(long[] args) {
@@ -637,7 +640,7 @@ public abstract class Function implements ParserListener {
     private void createUnreachable(@SuppressWarnings("unused") long[] args) {
         code.createUnreachable();
 
-        code = null;
+        finalizeCode();
     }
 
     protected int getAlign(long argument) {
