@@ -45,12 +45,20 @@ script:
 branches:
   only:
     - master
+osx_image: xcode8
 matrix:
   fast_finish: true
   include:
   - env: TEST_COMMAND='mx build'
     os: osx
-    osx_image: xcode8
+  - env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (3.2)'
+    os: osx
+  - env: TEST_COMMAND='mx su-travis1' CLANG='suite version (3.2)'
+    os: osx
+  - env: TEST_COMMAND='mx su-suite gcc' CLANG='suite version (3.2)'
+    os: osx
+  - env: TEST_COMMAND='mx su-travis2' CLANG='suite version (3.2)'
+    os: osx
   - env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (3.2)'
     jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-travis1' CLANG='suite version (3.2)'
