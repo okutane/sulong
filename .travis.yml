@@ -39,7 +39,7 @@ install:
   - export PATH=`pwd`/mx:$PATH
   - wget https://github.com/dougxc/openjdk8-jvmci-builder/releases/download/jvmci-0.23/jdk1.8.0_111-jvmci-0.23-linux-amd64.tar.gz
   - tar -xzf jdk1.8.0_111-jvmci-0.23-linux-amd64.tar.gz
-  - export JAVA_HOME=`pwd`/jdk1.8.0_111-jvmci-0.23
+  - # export JAVA_HOME=`pwd`/jdk1.8.0_111-jvmci-0.23
 script:
   - $TEST_COMMAND
 branches:
@@ -48,6 +48,9 @@ branches:
 matrix:
   fast_finish: true
   include:
+  - env: TEST_COMMAND='mx build'
+    os: osx
+    osx_image: xcode8
   - env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (3.2)'
     jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-travis1' CLANG='suite version (3.2)'
