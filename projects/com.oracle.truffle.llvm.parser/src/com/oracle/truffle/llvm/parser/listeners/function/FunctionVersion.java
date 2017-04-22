@@ -136,8 +136,6 @@ public final class FunctionVersion {
 
         @Override
         protected void createResume(long[] args) {
-            int i = 0;
-            final Type type = types.get(args[i++]);
             code.createResume();
             code = null;
         }
