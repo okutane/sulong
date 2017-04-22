@@ -149,7 +149,7 @@ public final class InstructionBlock implements ValueSymbol {
         addInstruction(LandingpadInstruction.generate(function.getSymbols(), type, isCleanup, clauseTypes, clauseTODO));
     }
 
-    public void createResume(Type type) {
+    public void createResume() {
         addInstruction(ResumeInstruction.generate());
     }
 
