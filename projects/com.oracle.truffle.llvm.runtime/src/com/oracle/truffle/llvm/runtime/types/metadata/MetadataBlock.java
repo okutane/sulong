@@ -32,8 +32,6 @@ package com.oracle.truffle.llvm.runtime.types.metadata;
 import java.util.ArrayList;
 import java.util.List;
 
-import java.util.ArrayList;
-import java.util.List;
 import com.oracle.truffle.llvm.runtime.types.MetadataVisitor;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
 import com.oracle.truffle.llvm.runtime.types.Type;
