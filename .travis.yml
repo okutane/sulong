@@ -68,6 +68,6 @@ matrix:
   - env: TEST_COMMAND='mx su-travis2' CLANG='suite version (3.2)'
     jdk: oraclejdk8
 after_success:
-  - find .|grep Gen\\.j|xargs -o cat
+  - find . -iname "*Gen.java" -print0 | xargs -0 cat
 after_failure:
   - find . -iname "*.log" -print0 | xargs -0 cat
