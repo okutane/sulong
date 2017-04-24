@@ -42,19 +42,17 @@ install:
   - export JAVA_HOME=`pwd`/jdk1.8.0_111-jvmci-0.23
 script:
   - $TEST_COMMAND
-branches:
-  only:
-    - master
+jdk: oraclejdk8
 matrix:
   fast_finish: true
   include:
   - env: TEST_COMMAND='mx su-checks --verbose' CLANG='suite version (3.2)'
-    jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-travis1' CLANG='suite version (3.2)'
-    jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-suite gcc' CLANG='suite version (3.2)'
-    jdk: oraclejdk8
   - env: TEST_COMMAND='mx su-travis2' CLANG='suite version (3.2)'
-    jdk: oraclejdk8
+  - env: TEST_COMMAND='mx su-suite sulong38'
+  - env: TEST_COMMAND='mx su-suite gcc38'
+  - env: TEST_COMMAND='mx su-suite llvm38'
+
 after_failure:
   - find . -iname "*.log" -print0 | xargs -0 cat
