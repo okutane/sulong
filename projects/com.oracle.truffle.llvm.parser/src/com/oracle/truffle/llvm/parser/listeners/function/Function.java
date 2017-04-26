@@ -102,6 +102,8 @@ public abstract class Function implements ParserListener {
 
     protected abstract void createAtomicLoad(long[] args);
 
+    protected abstract Type getReturnType(Type type);
+
     protected abstract void createCall(long[] args);
 
     protected void createInvoke(long[] args) {
@@ -111,13 +113,13 @@ public abstract class Function implements ParserListener {
 
         final int normalSuccessorBlock = (int) (args[i++]);
         final int unwindSuccessorBlock = (int) (args[i++]);
-        final FunctionType functionType = (FunctionType) types.get(args[i++]);
+        final Type functionType = types.get(args[i++]);
         final int target = getIndex(args[i++]);
         final int[] arguments = new int[args.length - i];
         for (int j = 0; i < args.length; i++, j++) {
             arguments[j] = getIndex(args[i]);
         }
-        final Type returnType = functionType.getReturnType();
+        final Type returnType = getReturnType(functionType);
         code.createInvoke(returnType, target, arguments, visibility, linkage, normalSuccessorBlock, unwindSuccessorBlock);
         if (!(returnType instanceof VoidType)) {
             symbols.add(returnType);

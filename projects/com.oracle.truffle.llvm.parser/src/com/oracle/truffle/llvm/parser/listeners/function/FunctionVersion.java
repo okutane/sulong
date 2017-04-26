@@ -76,6 +76,11 @@ public final class FunctionVersion {
         }
 
         @Override
+        protected Type getReturnType(Type type) {
+            return ((FunctionType) type).getReturnType();
+        }
+
+        @Override
         protected void createCall(long[] args) {
             int i = 0;
             final long linkage = args[i++];
@@ -169,6 +174,14 @@ public final class FunctionVersion {
         }
 
         @Override
+        protected Type getReturnType(Type type) {
+            if (type instanceof PointerType) {
+                type = ((PointerType) type).getPointeeType();
+            }
+            return ((FunctionType) type).getReturnType();
+        }
+
+        @Override
         protected void createCall(long[] args) {
             int i = 0;
             final long linkage = args[i++];
@@ -179,12 +192,7 @@ public final class FunctionVersion {
                 arguments[j] = getIndex(args[i]);
             }
 
-            Type type = symbols.get(target);
-            if (type instanceof PointerType) {
-                type = ((PointerType) type).getPointeeType();
-            }
-
-            final Type returnType = ((FunctionType) type).getReturnType();
+            final Type returnType = getReturnType(symbols.get(target));
             code.createCall(returnType, target, arguments, visibility, linkage);
 
             if (returnType != VoidType.INSTANCE) {
