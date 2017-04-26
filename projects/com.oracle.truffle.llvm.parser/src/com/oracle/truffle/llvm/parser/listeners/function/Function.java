@@ -127,7 +127,7 @@ public abstract class Function implements ParserListener {
         }
         final int target = getIndex(args[i++]);
         if (functionType == null) {
-            functionType = (FunctionType) ((PointerType)symbols.get(target)).getPointeeType();
+            functionType = (FunctionType) ((PointerType) symbols.get(target)).getPointeeType();
         }
         final int[] arguments = new int[args.length - i];
         for (int j = 0; i < args.length; i++, j++) {
