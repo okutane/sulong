@@ -43,7 +43,15 @@ import com.oracle.truffle.llvm.parser.records.FunctionRecord;
 import com.oracle.truffle.llvm.parser.records.Records;
 import com.oracle.truffle.llvm.parser.scanner.Block;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
-import com.oracle.truffle.llvm.runtime.types.*;
+import com.oracle.truffle.llvm.runtime.types.AggregateType;
+import com.oracle.truffle.llvm.runtime.types.ArrayType;
+import com.oracle.truffle.llvm.runtime.types.FunctionType;
+import com.oracle.truffle.llvm.runtime.types.PointerType;
+import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
+import com.oracle.truffle.llvm.runtime.types.StructureType;
+import com.oracle.truffle.llvm.runtime.types.Type;
+import com.oracle.truffle.llvm.runtime.types.VectorType;
+import com.oracle.truffle.llvm.runtime.types.VoidType;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType.PrimitiveKind;
 
 public abstract class Function implements ParserListener {
