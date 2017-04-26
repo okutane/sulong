@@ -43,13 +43,7 @@ import com.oracle.truffle.llvm.parser.records.FunctionRecord;
 import com.oracle.truffle.llvm.parser.records.Records;
 import com.oracle.truffle.llvm.parser.scanner.Block;
 import com.oracle.truffle.llvm.runtime.LLVMLogger;
-import com.oracle.truffle.llvm.runtime.types.AggregateType;
-import com.oracle.truffle.llvm.runtime.types.ArrayType;
-import com.oracle.truffle.llvm.runtime.types.PointerType;
-import com.oracle.truffle.llvm.runtime.types.PrimitiveType;
-import com.oracle.truffle.llvm.runtime.types.StructureType;
-import com.oracle.truffle.llvm.runtime.types.Type;
-import com.oracle.truffle.llvm.runtime.types.VectorType;
+import com.oracle.truffle.llvm.runtime.types.*;
 import com.oracle.truffle.llvm.runtime.types.PrimitiveType.PrimitiveKind;
 
 public abstract class Function implements ParserListener {
@@ -110,11 +104,48 @@ public abstract class Function implements ParserListener {
 
     protected abstract void createCall(long[] args);
 
-    protected abstract void createInvoke(long[] args);
+    protected void createInvoke(long[] args) {
+        int i = 0;
+        final long linkage = args[i++];
+        final long visibility = args[i++];
 
-    protected abstract void createLandingpad(long[] args);
+        final int normalSuccessorBlock = (int) (args[i++]);
+        final int unwindSuccessorBlock = (int) (args[i++]);
+        final FunctionType functionType = (FunctionType) types.get(args[i++]);
+        final int target = getIndex(args[i++]);
+        final int[] arguments = new int[args.length - i];
+        for (int j = 0; i < args.length; i++, j++) {
+            arguments[j] = getIndex(args[i]);
+        }
+        final Type returnType = functionType.getReturnType();
+        code.createInvoke(returnType, target, arguments, visibility, linkage, normalSuccessorBlock, unwindSuccessorBlock);
+        if (!(returnType instanceof VoidType)) {
+            symbols.add(returnType);
+        }
+        code = null;
+    }
 
-    protected abstract void createResume(long[] args);
+    protected void createLandingpad(long[] args) {
+        int i = 0;
+        final Type type = types.get(args[i++]);
+        final boolean isCleanup = args[i++] != 0;
+        final int numClauses = (int) args[i++];
+        long[] clauseKinds = new long[numClauses]; // catch = 0, filter = 1
+        long[] clauseTypes = new long[numClauses];
+        for (int j = 0; j < numClauses; j++) {
+            clauseKinds[j] = args[i++];
+            clauseTypes[j] = getIndex(args[i++]);
+        }
+        symbols.add(type);
+        code.createLandingpad(type, isCleanup, clauseKinds, clauseTypes);
+    }
+
+    protected void createResume(long[] args) {
+        int i = 0;
+        final Type type = types.get(args[i++]);
+        code.createResume(type);
+        code = null;
+    }
 
     protected abstract void createLoad(long[] args);
 
