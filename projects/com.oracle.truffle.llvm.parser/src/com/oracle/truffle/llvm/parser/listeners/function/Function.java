@@ -113,13 +113,19 @@ public abstract class Function implements ParserListener {
 
         final int normalSuccessorBlock = (int) (args[i++]);
         final int unwindSuccessorBlock = (int) (args[i++]);
-        final Type functionType = types.get(args[i++]);
+        FunctionType functionType = null;
+        if ((visibility >> 13 & 1) == 1) {
+            functionType = (FunctionType) types.get(args[i++]);
+        }
         final int target = getIndex(args[i++]);
+        if (functionType == null) {
+            functionType = (FunctionType) ((PointerType)symbols.get(target)).getPointeeType();
+        }
         final int[] arguments = new int[args.length - i];
         for (int j = 0; i < args.length; i++, j++) {
             arguments[j] = getIndex(args[i]);
         }
-        final Type returnType = getReturnType(functionType);
+        final Type returnType = functionType.getReturnType();
         code.createInvoke(returnType, target, arguments, visibility, linkage, normalSuccessorBlock, unwindSuccessorBlock);
         if (!(returnType instanceof VoidType)) {
             symbols.add(returnType);
