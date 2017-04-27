@@ -170,9 +170,9 @@ public abstract class Constants implements ParserListener {
 
         while (i < args.length) {
             i++; // type ignored
-            indices.add((int)args[i++]);
+            indices.add((int) args[i++]);
         }
-        
+
         generator.createGetElementPointerExpression(type, (int) args[indicesOffset + 1], indices.stream().mapToInt(Integer::intValue).toArray(), isInbounds);
     }
 }
