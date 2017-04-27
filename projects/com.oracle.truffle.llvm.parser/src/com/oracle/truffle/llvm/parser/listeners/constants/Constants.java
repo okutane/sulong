@@ -30,6 +30,7 @@
 package com.oracle.truffle.llvm.parser.listeners.constants;
 
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 
 import com.oracle.truffle.llvm.parser.listeners.ParserListener;
@@ -47,7 +48,7 @@ public abstract class Constants implements ParserListener {
 
     private final List<Type> symbols;
 
-    protected final ConstantGenerator generator;
+    private final ConstantGenerator generator;
 
     protected Type type;
 
@@ -156,5 +157,22 @@ public abstract class Constants implements ParserListener {
         symbols.add(type);
     }
 
-    protected abstract void createGetElementPointerExpression(long[] args, boolean isInbounds);
+    private void createGetElementPointerExpression(long[] args, boolean isInbounds) {
+        int i = 0;
+        int indicesOffset = 0;
+        if ((args.length & 1) != 0) {
+            // or ++ on args index
+            i++;
+            indicesOffset = 1;
+        }
+
+        List<Integer> indices = new ArrayList<>();
+
+        while (i < args.length) {
+            i++; // type ignored
+            indices.add((int)args[i++]);
+        }
+        
+        generator.createGetElementPointerExpression(type, (int) args[indicesOffset + 1], indices.stream().mapToInt(Integer::intValue).toArray(), isInbounds);
+    }
 }

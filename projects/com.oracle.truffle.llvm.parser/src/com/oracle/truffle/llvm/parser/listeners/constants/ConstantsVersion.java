@@ -38,51 +38,14 @@ import com.oracle.truffle.llvm.runtime.types.Type;
 public final class ConstantsVersion {
 
     public static class ConstantsV32 extends Constants {
-
         public ConstantsV32(Types types, List<Type> symbols, ConstantGenerator generator) {
             super(types, symbols, generator);
         }
-
-        @Override
-        protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-            int offset = 0;
-            if ((args.length & 1) != 0) {
-                // or ++ on args index
-                offset = 1;
-            }
-
-            int[] indices = new int[((args.length - offset) >> 1) - 1];
-
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = (int) args[((i + 2) << 1) + offset];
-            }
-
-            generator.createGetElementPointerExpression(type, (int) args[offset + 1], indices, isInbounds);
-        }
-
     }
 
     public static class ConstantsV38 extends Constants {
-
         public ConstantsV38(Types types, List<Type> symbols, ConstantGenerator generator) {
             super(types, symbols, generator);
-        }
-
-        @Override
-        protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-            int offset = 0;
-            if ((args.length & 1) != 0) {
-                // or ++ on args index
-                offset = 1;
-            }
-
-            int[] indices = new int[((args.length - offset) >> 1) - 1];
-
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = (int) args[((i + 2) << 1) + offset];
-            }
-
-            generator.createGetElementPointerExpression(type, (int) args[offset + 1], indices, isInbounds);
         }
     }
 }
