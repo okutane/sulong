@@ -1,5 +1,5 @@
 jdk:
   - oraclejdk8
 install:
-   - git clone -b maven https://github.com/okutane/mx   
+   - git clone -b maven --depth 1 https://github.com/okutane/mx   
    - mx/mx maven-install
