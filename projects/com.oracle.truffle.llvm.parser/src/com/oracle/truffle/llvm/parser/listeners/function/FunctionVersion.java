@@ -50,10 +50,15 @@ public final class FunctionVersion {
         @Override
         protected void createAllocation(long[] args) {
             int i = 0;
-            PointerType type = new PointerType(types.get(args[i++]));
+            Type type = types.get(args[i++]);
             i++; // Unused parameter
             int count = getIndexAbsolute(args[i++]);
             int align = getAlign(args[i]);
+
+            if ((align & (1 << 6)) == 0) {
+                type = ((PointerType) type).getPointeeType();
+            }
+            type = new PointerType(type);
 
             instructionBlock.createAllocation(type, count, align);
 
@@ -188,6 +193,11 @@ public final class FunctionVersion {
             i++; // Unused parameter
             int count = getIndexAbsolute(args[i++]);
             int align = getAlign(args[i]);
+
+            if ((align & (1 << 6)) == 0) {
+                type = ((PointerType) type).getPointeeType();
+            }
+            type = new PointerType(type);
 
             instructionBlock.createAllocation(type, count, align);
 
