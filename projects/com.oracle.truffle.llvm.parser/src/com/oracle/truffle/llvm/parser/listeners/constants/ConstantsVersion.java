@@ -45,13 +45,19 @@ public final class ConstantsVersion {
 
         @Override
         protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-            int[] indices = new int[(args.length >> 1) - 1];
-
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = (int) args[((i + 1) << 1) + 1];
+            int offset = 0;
+            if ((args.length & 1) != 0) {
+                // or ++ on args index
+                offset = 1;
             }
 
-            generator.createGetElementPointerExpression(type, (int) args[1], indices, isInbounds);
+            int[] indices = new int[((args.length - offset) >> 1) - 1];
+
+            for (int i = 0; i < indices.length; i++) {
+                indices[i] = (int) args[((i + 2) << 1) + offset];
+            }
+
+            generator.createGetElementPointerExpression(type, (int) args[offset + 1], indices, isInbounds);
         }
 
     }
@@ -64,13 +70,19 @@ public final class ConstantsVersion {
 
         @Override
         protected void createGetElementPointerExpression(long[] args, boolean isInbounds) {
-            int[] indices = new int[((args.length - 1) >> 1) - 1];
-
-            for (int i = 0; i < indices.length; i++) {
-                indices[i] = (int) args[(i + 2) << 1];
+            int offset = 0;
+            if ((args.length & 1) != 0) {
+                // or ++ on args index
+                offset = 1;
             }
 
-            generator.createGetElementPointerExpression(type, (int) args[2], indices, isInbounds);
+            int[] indices = new int[((args.length - offset) >> 1) - 1];
+
+            for (int i = 0; i < indices.length; i++) {
+                indices[i] = (int) args[((i + 2) << 1) + offset];
+            }
+
+            generator.createGetElementPointerExpression(type, (int) args[offset + 1], indices, isInbounds);
         }
     }
 }
