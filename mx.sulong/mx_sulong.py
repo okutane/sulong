@@ -497,6 +497,8 @@ def getVersion(program):
 
 def getLLVMVersion(llvmProgram):
     """executes the program with --version and extracts the LLVM version string"""
+    print 'getVersion:'
+    print llvmProgram
     versionString = getVersion(llvmProgram)
     print 'versionString: '
     print versionString
