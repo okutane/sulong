@@ -1,6 +1,9 @@
 jdk:
   - oraclejdk8
 install:
+   - wget -qO- http://releases.llvm.org/3.8.1/clang+llvm-3.8.1-x86_64-linux-gnu-ubuntu-16.04.tar.xz | tar xvz   
+   - export PATH=`pwd`/clang+llvm-3.8.1-x86_64-linux-gnu-ubuntu-16.04/bin:$PATH
    - git clone -b maven --depth 1 https://github.com/okutane/mx   
-   - mx/mx build
-   - mx/mx maven-install
+   - export PATH=`pwd`/mx:$PATH
+   - mx build
+   - mx maven-install
