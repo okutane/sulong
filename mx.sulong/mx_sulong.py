@@ -498,6 +498,8 @@ def getVersion(program):
 def getLLVMVersion(llvmProgram):
     """executes the program with --version and extracts the LLVM version string"""
     versionString = getVersion(llvmProgram)
+    print 'versionString: '
+    print versionString
     printLLVMVersion = re.search(r'(clang |LLVM )?(version )?(3\.\d)', versionString, re.IGNORECASE)
     if printLLVMVersion is None:
         return None
